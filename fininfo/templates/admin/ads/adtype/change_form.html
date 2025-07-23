@@ -1,0 +1,366 @@
+{# djlint:off H021 #}
+{% extends "admin/change_form.html" %}
+
+{% load i18n admin_urls %}
+
+{% block content %}
+  {{ block.super }}
+  {% block my_new_block %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js" integrity="sha256-oP6HI9z1XaZNBrJURtCoUT5SUnxFr8s3BzRl+cbzUq8=" crossorigin="anonymous">
+    </script>
+    <div id="charts" class="w-100">
+      <div class="position-relative col-12">
+        <h2 class="text-center">{% trans "Ko'rishlar statistikasi" %}</h2>
+        <div class="col-sm-7 d-flex">
+          <select name="time_unit" onchange="dateFilter(value, 0)">
+            <option value="day">{% trans "Kun" %}</option>
+            <option value="month">{% trans "Oy" %}</option>
+            <option value="year">{% trans "Yil" %}</option>
+          </select>
+          <p class="datetime">
+            {% trans "Dan:" %}
+            <input type="date"
+                   format="yyyy-mm-dd"
+                   name="from"
+                   class="vDateField"
+                   size="10"
+                   required=""
+                   onchange="dateChange(value, 'from', 0)" />
+            {% trans "Gacha:" %}
+            <input type="date"
+                   name="to"
+                   class="vDateField"
+                   size="10"
+                   required=""
+                   onchange="dateChange(value, 'to', 0)" />
+          </p>
+        </div>
+        <div style="height: 400px">
+          <canvas id="views"></canvas>
+        </div>
+      </div>
+      <div class="position-relative col-12">
+        <h2 class="text-center">{% trans "Bosishlar statistikasi" %}</h2>
+        <div class="col-sm-7 d-flex">
+          <select name="time_unit" onchange="dateFilter(value, 1)">
+            <option value="day">{% trans "Kun" %}</option>
+            <option value="month">{% trans "Oy" %}</option>
+            <option value="year">{% trans "Yil" %}</option>
+          </select>
+          <p class="datetime">
+            {% trans "Dan:" %}
+            <input type="date"
+                   name="from"
+                   class="vDateField"
+                   size="10"
+                   required=""
+                   onchange="dateChange(value, 'from', 1)" />
+            {% trans "Gacha:" %}
+            <input type="date"
+                   name="to"
+                   class="vDateField"
+                   size="10"
+                   required=""
+                   onchange="dateChange(value, 'to', 1)" />
+          </p>
+        </div>
+        <div style="height: 400px">
+          <canvas id="clicks"></canvas>
+        </div>
+      </div>
+    </div>
+    <script>
+      $(document).ready(function() {
+        const slug = `{{ original.slug }}`
+        const endpoints = [
+          `/ads/number-of-views/${slug}/?stat_type=views`,
+          `/ads/number-of-views/${slug}/?stat_type=clicks`,
+        ];
+        const elements = $("#charts").children();
+        loadAllStats(endpoints, elements);
+      });
+
+      function loadAllStats(endpoints, elements) {
+        endpoints.map((item, index) => {
+          loadStat(item, elements[index], index);
+          const from = elements[index].querySelector("input[name=from]");
+          const to = elements[index].querySelector("input[name=to]");
+          from.value = formatDate(oneMonthAgo);
+          to.value = formatDate(today);
+          from.setAttribute("min", formatDate(oneYearAgo));
+          to.setAttribute("min", formatDate(oneYearAgo));
+          from.setAttribute("max", formatDate(today));
+          to.setAttribute("max", formatDate(today));
+        });
+      }
+
+      const charts = [];
+      let unit = "day";
+      const today = new Date();
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      const formatDate = (date) => date.toISOString().split("T")[0];
+      const period = [formatDate(oneMonthAgo), formatDate(today)];
+
+      function loadStat(url, element, index) {
+        const el = element.querySelector("canvas");
+        $.ajax({
+          url: `${url}&start_date=${formatDate(oneMonthAgo)}&end_date=${formatDate(today)}`,
+          type: "GET",
+          dataType: "json",
+          success: (data) => {
+            const datasets = dataForChart(fillAbsentDates(data));
+            const temp = {
+              endpoint: url,
+              data,
+              unit: "day",
+              chart: new Chart(el, {
+                type: "line",
+                data: {
+                  labels: period,
+                  datasets: datasets,
+                },
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  legend: {
+                    position: "top",
+                  },
+                  stacked: false,
+                  scales: {
+                    x: {
+                      type: "time",
+                      time: {
+                        unit: "day",
+                        displayFormats: {
+                          day: "MMM dd",
+                          month: "MMM yyyy",
+                          year: "yyyy",
+                        },
+                        tooltipFormat: "MMM dd",
+                      },
+
+                      title: {
+                        display: true,
+                        text: `{% trans "Sana" %}`,
+                      },
+                    },
+                    y: {
+                      title: {
+                        display: true,
+                        text: `{% trans "Soni" %}`,
+                      },
+                      beginAtZero: true,
+                    },
+                  },
+                },
+              }),
+            };
+            charts[index] = temp;
+          },
+          error: () => {
+            console.log("Failed to fetch chart data from " + endpoint + "!");
+          },
+        });
+      }
+
+      function fillAbsentDates(data) {
+        const result = [];
+        const filledData = data.map((obj) => {
+          const temp = {
+            name: obj.name,
+            number_of_views: [],
+          };
+          const viewsMap = new Map(
+            obj.number_of_views.map((view) => [view.created_at, view.count])
+          );
+
+          const currentDate = new Date(period[0]);
+          const endDateObj = new Date(period[1]);
+
+          while (currentDate <= endDateObj) {
+            const formattedDate = formatDate(currentDate);
+            const count = viewsMap.get(formattedDate) || 0;
+            temp.number_of_views.push({
+              created_at: formattedDate,
+              count
+            });
+            currentDate.setDate(currentDate.getDate() + 1);
+          }
+
+          result.push(temp);
+        });
+        return result;
+      }
+
+      function dataForChart(data) {
+        const temp = [];
+        for (const item of data) {
+          const objectData = [];
+          for (const viewData of item.number_of_views) {
+            objectData.push({
+              x: viewData.created_at,
+              y: viewData.count
+            });
+          }
+          temp.push({
+            label: item.name,
+            data: objectData,
+          });
+        }
+        return temp;
+      }
+
+      function dateFilter(timeUnit, index) {
+        const chart = charts[index];
+        unit = timeUnit;
+        let newData = [];
+        chart.unit = timeUnit;
+        console.log(chart);
+        if (timeUnit === "month") {
+          newData = aggregateViewsByMonth(chart.data);
+          chart.chart.config._config.options.scales.x.time.tooltipFormat =
+            "MMM yyyy";
+        } else if (timeUnit === "day") {
+          newData = fillAbsentDates(chart.data);
+          chart.chart.config._config.options.scales.x.time.tooltipFormat =
+            "MMM dd";
+        } else if (timeUnit === "year") {
+          newData = aggregateViewsByYear(chart.data);
+          chart.chart.config._config.options.scales.x.time.tooltipFormat = "yyyy";
+        }
+        chart.chart.config._config.options.scales.x.time.unit = timeUnit;
+        chart.chart.config._config.data.datasets = dataForChart(newData);
+        chart.chart.update();
+      }
+
+      function fillAbsentDates(data) {
+        const result = [];
+        const filledData = data.map((obj) => {
+          const temp = {
+            name: obj.name,
+            number_of_views: [],
+          };
+          const viewsMap = new Map(
+            obj.number_of_views.map((view) => [view.created_at, view.count])
+          );
+
+          const currentDate = new Date(period[0]);
+          const endDateObj = new Date(period[1]);
+
+          while (currentDate <= endDateObj) {
+            const formattedDate = formatDate(currentDate);
+            const count = viewsMap.get(formattedDate) || 0;
+            temp.number_of_views.push({
+              created_at: formattedDate,
+              count
+            });
+            currentDate.setDate(currentDate.getDate() + 1);
+          }
+
+          result.push(temp);
+        });
+        return result;
+      }
+
+      function aggregateViewsByMonth(data) {
+        const result = [];
+        data.map((obj) => {
+          const aggregatedViews = {};
+
+          obj.number_of_views.forEach((view) => {
+            const month = view.created_at.substring(0, 7); // Extracting YYYY-MM part
+            if (!aggregatedViews[month]) {
+              aggregatedViews[month] = {
+                created_at: month,
+                count: view.count,
+              };
+            } else {
+              aggregatedViews[month].count += view.count;
+            }
+          });
+
+          result.push({
+            name: obj.name,
+            number_of_views: Object.values(aggregatedViews),
+          });
+        });
+        return result;
+      }
+
+      function aggregateViewsByYear(data) {
+        const result = [];
+        data.map((obj) => {
+          const aggregatedViews = {};
+
+          obj.number_of_views.forEach((view) => {
+            const year = view.created_at.substring(0, 4);
+            if (!aggregatedViews[year]) {
+              aggregatedViews[year] = {
+                created_at: year,
+                count: view.count,
+              };
+            } else {
+              aggregatedViews[year].count += view.count;
+            }
+          });
+
+          result.push({
+            name: obj.name,
+            number_of_views: Object.values(aggregatedViews),
+          });
+        });
+        return result;
+      }
+
+      async function dateChange(val, type, index) {
+        const chart = charts[index];
+        const elements = $("#charts").children();
+        const from = elements[index].querySelector("input[name=from]");
+        const to = elements[index].querySelector("input[name=to]");
+        let tempDatasets;
+        if (!val) {
+          if (type === "from") {
+            period[0] = formatDate(oneMonthAgo);
+            from.value = period[0];
+          } else if (type === "to") {
+            period[1] = formatDate(today);
+            to.value = period[1];
+          }
+          tempDatasets = dataForChart(fillAbsentDates(chart.data));
+        } else {
+          if (type === "to") from.setAttribute("max", formatDate(new Date(val)));
+          else to.setAttribute("min", formatDate(new Date(val)));
+
+          period[0] = from.value;
+          period[1] = to.value;
+
+          await $.ajax({
+            url: `${chart.endpoint}&start_date=${period[0]}&end_date=${period[1]}`,
+            type: "GET",
+            dataType: "json",
+            success: (data) => {
+              chart.data = data;
+              if (unit === "day")
+                tempDatasets = dataForChart(fillAbsentDates(data));
+              else if (unit === "month")
+                tempDatasets = dataForChart(aggregateViewsByMonth(data));
+              else if (unit === "year")
+                tempDatasets = dataForChart(aggregateViewsByYear(data));
+            },
+            error: () => {
+              console.log("Failed to fetch chart data from " + endpoint + "!");
+            },
+          });
+        }
+        chart.chart.config._config.data.labels = period;
+        chart.chart.config._config.data.datasets = tempDatasets;
+        chart.chart.update();
+      }
+    </script>
+  {% endblock my_new_block %}
+{% endblock content %}

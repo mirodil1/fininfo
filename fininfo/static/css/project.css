@@ -1,0 +1,78 @@
+/* These styles are generated from project.scss. */
+
+
+.alert-debug {
+  color: black;
+  background-color: white;
+  border-color: #d6e9c6;
+}
+
+.alert-error {
+  color: #b94a48;
+  background-color: #f2dede;
+  border-color: #eed3d7;
+}
+
+#jazzy-actions {
+  position: sticky;
+  top: 10px;
+}
+
+.parler-language-tabs {
+  flex: 0 0 100% !important;
+  max-width: 100% !important;
+  padding: 0 7.5px !important;
+  border: none !important;
+}
+
+.django-ckeditor-widget {
+  width: 100%;
+}
+
+.field-tags>.select2 {
+  width: 100% !important;
+}
+
+.field-tags .select2-selection {
+  padding-bottom: 0 !important;
+  padding-top: 5px !important;
+}
+
+.field-tags .select2-selection__choice {
+  color: #FFF !important;
+  font-weight: 600 !important;
+  background-color: #007BFF !important;
+  padding-bottom: 3px !important;
+  padding-left: 23px !important;
+  margin-top: 0 !important;
+}
+
+.field-tags .select2-selection__choice__remove {
+  margin-left: 0 !important;
+  padding-bottom: 3px !important;
+  border-top-left-radius: 3px !important;
+  border-bottom-left-radius: 3px !important;
+  color: #FFF !important;
+}
+
+.field-tags .select2-selection__choice__remove:hover {
+  color: #007BFF !important;
+}
+
+.sidebar li.nav-header {
+  display: none !important;
+}
+
+.dropdown-item[value="uz"] {
+  color: transparent !important;
+}
+
+.dropdown-item[value="uz"]::before {
+  content: "O'zbekcha" !important;
+  color: #212529 !important;
+}
+
+.dropdown-item.active[value="uz"]::before {
+  content: "O'zbekcha" !important;
+  color: #ffffff !important;
+}

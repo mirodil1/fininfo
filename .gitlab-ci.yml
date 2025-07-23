@@ -1,0 +1,11 @@
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  script:
+    - ssh -oStrictHostKeyChecking=no fininfo@109.205.183.3 -p 2222 "cd /var/www/fininfo/fininfo-back && git pull && docker compose -f production.yml up django -d --build"
+    - ssh -oStrictHostKeyChecking=no fininfo@109.205.183.3 -p 2222 "cd /var/www/fininfo/fininfo-back && docker compose -f production.yml run --rm django python manage.py migrate"
+  environment:
+    name: production
+    url: https://cp.fininfo.uz/
