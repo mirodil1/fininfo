@@ -255,7 +255,10 @@ X_FRAME_OPTIONS = "DENY"
 # Django Admin URL.
 ADMIN_URL = "admin/"
 # https://docs.djangoproject.com/en/dev/ref/settings/#admins
-ADMINS = [("""fininfo""",)]
+ADMINS = [
+    ("fininfo", "lidorim@yandex.com"),
+    ("admin", "ortikov@gmail.com")
+]
 # https://docs.djangoproject.com/en/dev/ref/settings/#managers
 MANAGERS = ADMINS
 # https://cookiecutter-django.readthedocs.io/en/latest/settings.html#other-environment-settings
