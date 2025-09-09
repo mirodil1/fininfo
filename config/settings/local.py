@@ -14,7 +14,9 @@ SECRET_KEY = env(
     default="fFoF2UUpRHMp88MThI9Mfi2VKfp13QTtT7yGDZTK2wZuTOIAY6kldlz2WHYNXgFg",
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1"]  # noqa: S104
+ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1", "grand-peacock-truly.ngrok-free.app"]  # noqa: S104
+# https://docs.djangoproject.com/en/dev/ref/settings/#csrf-trusted-origins
+CSRF_TRUSTED_ORIGINS = ["https://grand-peacock-truly.ngrok-free.app"]
 
 # CACHES
 # ------------------------------------------------------------------------------

@@ -19,6 +19,8 @@ from rest_framework.mixins import ListModelMixin, RetrieveModelMixin, CreateMode
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from fininfo.news.filters import NewsFilter
 from fininfo.news.models import News, Comment
@@ -277,3 +279,5 @@ class PopularNewsViewSet(ListModelMixin, GenericViewSet):
 class CommentCreateViewSet(CreateModelMixin, GenericViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentCreateSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]

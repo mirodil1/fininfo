@@ -3,12 +3,16 @@ from parler_rest.serializers import TranslatableModelSerializer
 from rest_framework import serializers
 from taggit.serializers import TaggitSerializer
 from taggit.serializers import TagListSerializerField
+from django.contrib.auth import get_user_model
 
 from fininfo.categories.serializers import CategorySerializer
 from fininfo.core.serializers import TranslatedSerializerMixin
 from fininfo.news.models import News
 from fininfo.news.models import NewsGallery
 from fininfo.news.models import Comment
+
+
+User = get_user_model()
 
 
 class NewsGallerySerializer(serializers.ModelSerializer):
@@ -21,12 +25,21 @@ class NewsGallerySerializer(serializers.ModelSerializer):
         ]
 
 
-class CommentSerializer(serializers.ModelSerializer):    
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "first_name", "last_name"]
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    
     class Meta:
         model = Comment
         fields = [
             "user",
             "body",
+            "created_at",
         ]
 
 

@@ -7,6 +7,7 @@ from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import TelegramLoginSerializer
 
@@ -24,14 +25,17 @@ class TelegramAuthView(APIView):
         if not self.verify_telegram_auth(data):
             return Response({"error": "Authorization failed"}, status=status.HTTP_400_BAD_REQUEST)
 
-        user, created = User.objects.get_or_create(telegram_id=data["id"], defaults={
+        user, created = User.objects.get_or_create(telegram_id=data["telegram_id"], defaults={
             "username": data.get("username") or f"tg_{data['id']}",
             "first_name": data.get("first_name"),
             "last_name": data.get("last_name"),
         })
+        refresh = RefreshToken.for_user(user)
 
         return Response({"message": "success", "data": {
             "id": user.id,
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
             "username": user.username,
             "first_name": user.first_name,
             "last_name": user.last_name,
@@ -42,6 +46,7 @@ class TelegramAuthView(APIView):
         received_hash = data.pop("hash")
         auth_data = [f"{k}={v}" for k, v in sorted(data.items())]
         data_check_string = "\n".join(auth_data)
-        secret_key = hashlib.sha256(settings.TELEGRAM_BOT_TOKEN.encode()).digest()
+        secret_key = hashlib.sha256(settings.BOT_TOKEN.encode()).digest()
         hmac_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
         return hmac_hash == received_hash
+

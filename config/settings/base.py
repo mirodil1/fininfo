@@ -118,6 +118,7 @@ THIRD_PARTY_APPS = [
     "taggit",
     "django_ckeditor_5",
     "django_filters",
+    "rest_framework_simplejwt",
 ]
 
 LOCAL_APPS = [
@@ -325,7 +326,7 @@ CELERY_TASK_SEND_SENT_EVENT = True
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.SessionAuthentication",
-        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
