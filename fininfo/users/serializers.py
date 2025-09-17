@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 
 class TelegramLoginSerializer(serializers.Serializer):
-    telegram_id = serializers.CharField()
+    id = serializers.CharField()
     first_name = serializers.CharField()
     last_name = serializers.CharField(required=False)
     username = serializers.CharField(required=False)

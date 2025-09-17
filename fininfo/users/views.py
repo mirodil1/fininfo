@@ -1,6 +1,5 @@
 import hashlib
 import hmac
-import time
 
 from django.contrib.auth import get_user_model
 from django.conf import settings
@@ -25,18 +24,17 @@ class TelegramAuthView(APIView):
         if not self.verify_telegram_auth(data):
             return Response({"error": "Authorization failed"}, status=status.HTTP_400_BAD_REQUEST)
 
-        user, created = User.objects.get_or_create(telegram_id=data["telegram_id"], defaults={
+        user, created = User.objects.get_or_create(telegram_id=data["id"], defaults={
             "username": data.get("username") or f"tg_{data['id']}",
             "first_name": data.get("first_name"),
-            "last_name": data.get("last_name"),
+            "last_name": data.get("last_name") or "",
         })
         refresh = RefreshToken.for_user(user)
 
         return Response({"message": "success", "data": {
             "id": user.id,
-            "refresh": str(refresh),
-            "access": str(refresh.access_token),
             "username": user.username,
+            "access": str(refresh.access_token),
             "first_name": user.first_name,
             "last_name": user.last_name,
             "photo_url": data.get("photo_url"),
@@ -49,4 +47,3 @@ class TelegramAuthView(APIView):
         secret_key = hashlib.sha256(settings.BOT_TOKEN.encode()).digest()
         hmac_hash = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
         return hmac_hash == received_hash
-
