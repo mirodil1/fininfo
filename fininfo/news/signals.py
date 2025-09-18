@@ -48,3 +48,11 @@ def save_translated_news(sender, instance, created, **kwargs):
                 instance.image_source = image_source
                 instance.image_name = image_name
                 instance.save()
+
+
+@receiver(post_save, sender=News)
+def clear_cache_on_comment_save(sender, instance, created, **kwargs):
+    if created:
+        from django.core.cache import cache
+        
+        cache.clear()
