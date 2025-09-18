@@ -2,7 +2,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from parler.utils.context import switch_language
 
-from fininfo.news.models import News
+from fininfo.news.models import News, Comment
 from fininfo.utils.transliterate import to_cyrillic
 from fininfo.utils.transliterate import to_latin
 
@@ -50,7 +50,7 @@ def save_translated_news(sender, instance, created, **kwargs):
                 instance.save()
 
 
-@receiver(post_save, sender=News)
+@receiver(post_save, sender=Comment)
 def clear_cache_on_comment_save(sender, instance, created, **kwargs):
     if created:
         from django.core.cache import cache
