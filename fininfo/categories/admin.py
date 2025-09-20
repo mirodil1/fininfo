@@ -19,8 +19,6 @@ class CategoryAdmin(SortableAdminMixin, TranslatableAdmin):
                 "fields": (
                     "name",
                     "description",
-                    "icon",
-                    "image",
                     "is_menu",
                 ),
             },

@@ -361,9 +361,9 @@ CHAT_ID = env("CHAT_ID")
 JAZZMIN_SETTINGS = {
     "site_title": "fininfo.uz",
     "site_header": "fininfo",
-    "site_brand": "fininfo.uz",
-    "login_logo": "images/logo/fininfo-horizontal.png",
-    "site_logo": "images/logo/cp-fininfo-icon.png",
+    "site_brand": "fininfo",
+    "login_logo": "images/logo/fininfo.png",
+    "site_logo": "images/logo/fininfo.png",
     "welcome_sign": "",
     "hide_apps": [
         "taggit",

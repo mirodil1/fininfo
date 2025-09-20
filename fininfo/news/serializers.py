@@ -56,6 +56,7 @@ class NewsSerializer(
     image_small = serializers.ImageField(read_only=True)
     gallery = NewsGallerySerializer(many=True)
     comments = CommentSerializer(many=True)
+    author = UserSerializer(read_only=True)
 
     class Meta:
         model = News
@@ -63,6 +64,7 @@ class NewsSerializer(
             "id",
             "translations",
             "category",
+            "author",
             "tags",
             "title",
             "short_content",
